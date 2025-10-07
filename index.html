@@ -65,9 +65,9 @@
 
         // Define the time points (in seconds) in the video for each gaze direction.
         const FRAME_TIMES = {
-            LEFT: 5.0,   // Time in video when person is looking left
-            CENTER: 3.2, // Time in video when person is looking center
-            RIGHT: 1.0    // Time in video when person is looking right
+            LEFT: 50,   // Time in video when person is looking left
+            CENTER: 32, // Time in video when person is looking center
+            RIGHT: 10    // Time in video when person is looking right
         };
 
         let model = null;
@@ -118,6 +118,10 @@
                     // Pause the main video initially and set it to the center position.
                     displayVideo.pause();
                     displayVideo.currentTime = FRAME_TIMES.CENTER;
+                    
+                    // --- FIX: Set initial position text to prevent a blank display ---
+                    positionEl.textContent = 'CENTER';
+
 
                     // Hide the overlay and start the detection loop
                     setTimeout(() => {
@@ -229,7 +233,8 @@
         function animateVideo() {
             // Calculate the difference between where we are and where we want to be.
             const diff = targetTime - displayVideo.currentTime;
-            const threshold = 0.05; // Stop when we are very close to the target.
+            // Stop when we are very close to the target to prevent jitter.
+            const threshold = 0.05; 
 
             if (Math.abs(diff) < threshold) {
                 displayVideo.currentTime = targetTime; // Snap to the final position.
@@ -238,12 +243,17 @@
                 return; // Stop the loop
             }
 
-            // --- FASTER SPEED ---
-            // The speed of the scrubbing animation. Higher is faster.
-            const animationSpeed = 1; // Was 0.08
+            // --- CONSTANT SPEED SCRUBBING ---
+            // This value determines how many seconds the video moves per animation frame.
+            // A smaller value creates a smoother, slower scrub. This gives a nice fluid motion.
+            const scrubSpeed = 2;
             
-            // Move the video's current time a small step towards the target.
-            displayVideo.currentTime += diff * animationSpeed;
+            // Move forward or backward at a constant speed.
+            if (diff > 0) {
+                displayVideo.currentTime += scrubSpeed;
+            } else {
+                displayVideo.currentTime -= scrubSpeed;
+            }
 
             // Request the next frame to continue the animation.
             animationFrameId = requestAnimationFrame(animateVideo);
